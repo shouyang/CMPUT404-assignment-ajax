@@ -40,6 +40,7 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
                 if (xhr.status==200) {
                     //XXX: parse some JSON from the request!
                     //XXX: Pass the data to the callback!
+                    callback( JSON.parse(xhr.responseText) );
                 }
             } 
             catch(e) {
@@ -50,23 +51,30 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
     //XXX: POST to a URL
     //XXX: set the mimetype and the accept headers!
     // Remember to use application/json !
+
+    xhr.open("POST", url, true);
+    xhr.overrideMimeType("application/json");
+    xhr.send(objects);
 }
 
 
 world = {};
 
-//XXX: TODO Make this prettier!
+//XXX: TODO Make this prettier! -- Done
 function drawCircle(context,entity) {
     with(context) {
+
         beginPath();              
         lineWidth = 3;
+        linecap = "round"
         var x = entity["x"];
         var y = entity["y"];
         //moveTo(x,y);
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
         arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-        stroke();                                
+        stroke();
+        fill();                                
     }
 }
 
@@ -138,13 +146,16 @@ function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just  modified!
-
+    sendJSONXMLHTTPRequest("/entity/" + entity, JSON.stringify(data), function() {} )
 }
 
+
+// Changed this so that each session can persist their own stuff outside of other sessions
 var counter = 0;
+var id_prefix = Math.random().toString(36)
 function addEntityWithoutName(data) {
     //var name = "X"+Math.floor((Math.random()*100)+1);
-    var name = "X"+(counter++)%100;
+    var name = id_prefix +(counter++)%100;
     addEntity(name,data);
 }
 
@@ -244,29 +255,49 @@ mouse = (function() {
     return self;
 })();
 
+
 // Add the application specific mouse listeners!
-//XXX: TODO Make these prettier!
+// - Changes: Made each session have its own start and end color
+// - Changes: Made each line have its own color via random generator function
+
+var session_color
+var cur_color;
+
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    if (!session_color) { session_color = getRandomColor() }
+    addEntityWithoutName({'x':x,'y':y,'colour': session_color, 'radius': 15});
+    cur_color = getRandomColor();
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour': session_color, 'radius': 15});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
+    if (!session_color) { session_color = getRandomColor() }
+    addEntityWithoutName({'x':x,'y':y,'colour': cur_color,
                           'radius':10});
 });
 
 
 function update() {
-    //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
+    sendJSONXMLHTTPRequest("/world", null, function(data) {world = data; drawNextFrame()})    
     drawFrame();
 }
 
 // 30 frames per second
 setInterval( update, 1000/30.0);
+
+
+// https://stackoverflow.com/questions/1484506/random-color-generator
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
 
 
 
