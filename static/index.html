@@ -22,7 +22,7 @@
     "/>
     <script src="json2.js"></script>
   </head> 
-  <body bgcolor="black" height="100%" width="100%"> 
+  <body bgcolor="white" height="100%" width="100%"> 
     <canvas id="c" width="100%" height="100%" style="-webkit-tap-highlight-color: transparent;"></canvas> 
     <script>
 var canvas = document.getElementById('c');
@@ -91,7 +91,7 @@ function prepEntity(entity) {
 function clearFrame() {
     with(context) {
 	moveTo(0,0);
-	fillStyle = "#000";
+	fillStyle = "#FFFFFF"; // Made background color white
 	fillRect(0,0,W,H);
     }
 
@@ -260,7 +260,7 @@ mouse = (function() {
 // - Changes: Made each session have its own start and end color
 // - Changes: Made each line have its own color via random generator function
 
-var session_color
+var session_color;
 var cur_color;
 
 mouse.mousedowners.push(function(x,y,clicked,e) {

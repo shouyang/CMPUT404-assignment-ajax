@@ -79,8 +79,6 @@ def hello():
 def update(entity):
     '''update the entities via this interface'''
 
-    print(request.data.decode("utf8"))
-
     myWorld.set(entity, flask_post_json() )
     return json.dumps(myWorld.get(entity))
 
@@ -96,12 +94,6 @@ def get_entity(entity):
 def clear():
     myWorld.clear()
     return json.dumps(myWorld.world())
-
-
-
-
-
-
 
 
 if __name__ == "__main__":
